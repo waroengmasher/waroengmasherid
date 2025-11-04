@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>WAROENG MASHER - Panel Kasir (POS) Mobile</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* GAYA UNTUK PANEL KASIR (POS) MOBILE */
+        html, body { 
+            font-family: 'Montserrat', sans-serif; 
+            background-color: #1A1A1A; /* Latar belakang sangat gelap */
+            color: #E0E0E0;
+            height: 100%; /* Gunakan height 100% untuk html dan body */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden; /* Mencegah scroll horizontal */
+            touch-action: pan-y; /* Optimasi untuk sentuhan */
+        }
+        body {
+            display: flex; /* Menggunakan Flexbox untuk full height */
+            flex-direction: column;
+        }
+        h1, h2, h3, h4, h5, h6, .navbar-brand { 
+            font-family: 'Lora', serif; 
+            font-weight: 700; 
+            color: #FFFFFF;
+        }
+        .navbar-brand { 
+            color: #FFD700 !important; /* Brand dengan warna emas/kuning cerah */
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+        .navbar {
+            background-color: #282828 !important; /* Navbar gelap */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            flex-shrink: 0; /* Mencegah navbar menyusut */
+        }
+        /* Konten utama untuk tata letak mobile */
+        #pos-content {
+            display: flex;
+            flex-direction: column; /* Ubah dari flex menjadi kolom untuk mobile */
+            flex: 1; /* Konten mengisi sisa ruang */
+            overflow: hidden; /* Mencegah konten meluap dari container */
+        }
+        #menu-panel {
+            flex: 1; /* Panel Menu mengisi ruang yang tersedia */
+            padding: 0.5rem;
+            overflow-y: auto; /* Scrollable jika menu banyak */
+            -webkit-overflow-scrolling: touch; /* Scroll halus di iOS */
+        }
+        #checkout-panel {
+            flex-shrink: 0; /* Panel Checkout tidak menyusut */
+            background-color: #282828; /* Warna kontras untuk keranjang */
+            padding: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            border-top: 2px solid #333333;
+        }
+        .product-card { 
+            border: none;
+            background-color: #333333; /* Card lebih gelap dari body */
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 8px;
+            overflow: hidden; 
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            cursor: pointer; /* Menandakan bisa diklik */
+            position: relative; /* Diperlukan untuk posisi tombol detail */
+            margin-bottom: 0.5rem;
+        }
+        .product-card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 16px rgba(255, 215, 0, 0.2); 
+            border: 1px solid #FFD700;
+        }
+        .product-card .card-img-top { 
+            height: 100px; /* Lebih kecil untuk mobile */
+            object-fit: cover;
+        }
+        .product-card .card-body { 
+            padding: 0.5rem; 
+            min-height: 80px; /* Tambahkan tinggi minimum untuk card body */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .product-card .card-title { 
+            color: #FFD700;
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+            /* Menghapus white-space: nowrap, overflow: hidden, dan text-overflow: ellipsis */
+            /* Mengganti dengan animasi scroll untuk teks panjang */
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Maksimal 2 baris */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.3s ease;
+            min-height: 2.4em; /* Minimal tinggi untuk 2 baris */
+        }
+        .product-card:hover .card-title {
+            -webkit-line-clamp: unset; /* Tampilkan semua baris saat hover */
+            max-height: none;
+            overflow: visible;
+            text-overflow: unset;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
+        .product-card h6 { 
+            color: #FFFFFF; 
+            font-size: 1rem;
+            margin: 0;
+        }
+        .section-title {
+            position: sticky;
+            top: 0;
+            background-color: #1A1A1A;
+            z-index: 10;
+            padding: 10px 0;
+            margin-top: -10px;
+            font-size: 1.2rem;
+        }
+        /* Tombol Detail Produk */
+        .btn-detail {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: rgba(40, 40, 40, 0.8);
+            color: #FFD700;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            z-index: 2;
+            transition: background-color 0.2s;
+        }
+        .btn-detail:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #FFFFFF;
+        }
+
+        /* Styling Keranjang di Panel Kasir Mobile */
+        #cart-items-container-pos {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 10px;
+            max-height: 150px; /* Batasi tinggi maksimum untuk keranjang */
+            -webkit-overflow-scrolling: touch; /* Scroll halus di iOS */
+        }
+        .cart-item-pos {
+            border-bottom: 1px solid #333333;
+            padding: 8px 0;
+        }
+        .cart-item-pos h6 {
+            color: #E0E0E0;
+            font-size: 0.9rem;
+        }
+        .cart-item-pos .price-qty {
+            font-size: 0.8rem;
+            color: #B0B0B0;
+        }
+        .btn-qty {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            font-size: 1rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-success {
+            background-color: #4CAF50;
+            border-color: #4CAF50;
+        }
+        .btn-success:hover {
+            background-color: #388E3C;
+            border-color: #388E3C;
+        }
+        .btn-primary {
+            background-color: #FFD700;
+            border-color: #FFD700;
+            color: #1A1A1A;
+        }
+        .btn-primary:hover {
+            background-color: #E0B400;
+            border-color: #E0B400;
+        }
+        .payment-summary {
+            background-color: #1A1A1A;
+            padding: 0.8rem;
+            border-radius: 8px;
+        }
+        .form-control-dark {
+            background-color: #333333;
+            color: #FFFFFF;
+            border: 1px solid #555555;
+        }
+        .form-control-dark:focus {
+            background-color: #333333;
+            color: #FFFFFF;
+            border-color: #FFD700;
+            box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.25);
+        }
+        /* Gaya untuk tombol diskon */
+        .discount-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .discount-btn {
+            flex: 1;
+            min-width: 50px;
+            padding: 5px;
+            font-size: 0.7rem;
+        }
+        .discount-btn.active {
+            background-color: #FFD700;
+            color: #1A1A1A;
+            border-color: #FFD700;
+        }
+        .discount-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+        }
+        .original-total {
+            text-decoration: line-through;
+            color: #999;
+        }
+        .discount-amount {
+            color: #4CAF50;
+        }
+        /* Gaya Modal */
+        .modal-content {
+            background-color: #282828;
+            color: #E0E0E0;
+        }
+        .modal-header {
+            border-bottom: 1px solid #444;
+        }
+        .modal-footer {
+            border-top: 1px solid #444;
+        }
+        .btn-close {
+            filter: invert(1);
+        }
+        /* Gaya untuk Receipt/Struk */
+        #receipt-content {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #fff;
+            color: #000;
+            padding: 15px;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            border-radius: 5px;
+        }
+        #receipt-content .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        #receipt-content .receipt-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: #000;
+        }
+        #receipt-content .receipt-header p {
+            margin: 5px 0;
+            font-size: 0.8rem;
+        }
+        #receipt-content .receipt-body {
+            margin-bottom: 15px;
+        }
+        #receipt-content .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        #receipt-content .receipt-footer {
+            border-top: 2px dashed #000;
+            padding-top: 10px;
+            text-align: center;
+        }
+        #receipt-content .receipt-footer p {
+            margin: 5px 0;
+            font-size: 0.8rem;
+        }
+        /* Gaya untuk QR dengan gambar struk */
+        .qr-receipt-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .qr-receipt-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .qr-receipt-content {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .qr-code-wrapper {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .qr-code-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700);
+            border-radius: 10px;
+            z-index: -1;
+            opacity: 0.7;
+        }
+        .qr-code-wrapper img {
+            display: block;
+            width: 150px !important; /* Lebih kecil untuk mobile */
+            height: 150px !important; /* Lebih kecil untuk mobile */
+        }
+        .receipt-preview {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            max-width: 180px; /* Lebih kecil untuk mobile */
+            font-family: 'Courier New', monospace;
+            font-size: 0.65rem; /* Lebih kecil untuk mobile */
+            color: #000;
+            border: 1px solid #ddd;
+        }
+        .receipt-preview .receipt-preview-header {
+            text-align: center;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .receipt-preview .receipt-preview-header h4 {
+            margin: 0;
+            font-size: 0.8rem; /* Lebih kecil untuk mobile */
+            font-weight: bold;
+            color: #000; /* Pastikan warna h4 juga hitam */
+        }
+        .receipt-preview .receipt-preview-body {
+            margin-bottom: 10px;
+        }
+        .receipt-preview .receipt-preview-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            font-size: 0.6rem; /* Lebih kecil untuk mobile */
+        }
+        .receipt-preview .receipt-preview-footer {
+            border-top: 1px dashed #000;
+            padding-top: 5px;
+            text-align: center;
+            font-size: 0.55rem; /* Lebih kecil untuk mobile */
+        }
+        .qr-instruction {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.7rem; /* Lebih kecil untuk mobile */
+            color: #666;
+        }
+        /* Gaya untuk cetak */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #receiptModal, #receiptModal * {
+                visibility: visible;
+            }
+            #receiptModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .modal-header, .modal-footer {
+                display: none !important;
+            }
+            .modal-dialog {
+                margin: 0;
+                max-width: 100%;
+            }
+            .qr-receipt-container {
+                box-shadow: none !important;
+            }
+            .receipt-preview {
+                box-shadow: none !important;
+            }
+        }
+        /* Gaya untuk badge kategori */
+        .category-badge {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            background-color: rgba(255, 215, 0, 0.8);
+            color: #1A1A1A;
+            font-size: 0.6rem; /* Lebih kecil untuk mobile */
+            font-weight: bold;
+            padding: 2px 4px; /* Padding lebih kecil */
+            border-radius: 4px;
+            z-index: 2;
+        }
+        .hot-badge {
+            background-color: rgba(255, 87, 34, 0.8);
+            color: #FFFFFF;
+        }
+        .cold-badge {
+            background-color: rgba(33, 150, 243, 0.8);
+            color: #FFFFFF;
+        }
+        /* Animasi pulse untuk QR */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+            }
+        }
+        .qr-code-wrapper {
+            animation: pulse 2s infinite;
+        }
+
+        /* --- TAMBAHAN STYLE UNTUK LOGIN MOBILE --- */
+        #login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #1A1A1A;
+            padding: 1rem;
+        }
+        .login-box {
+            background-color: #282828;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 350px; /* Lebih kecil untuk mobile */
+        }
+        .login-box h3 {
+            color: #FFD700;
+            font-family: 'Lora', serif;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem; /* Lebih kecil untuk mobile */
+        }
+        
+        /* Optimasi untuk sentuhan */
+        .btn {
+            min-height: 44px; /* Minimal tinggi untuk sentuhan */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Optimasi untuk scroll di mobile */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1A1A1A;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+        
+        /* Optimasi untuk modal di mobile */
+        .modal-dialog {
+            margin: 0.5rem;
+            max-width: calc(100% - 1rem);
+        }
+        
+        /* Optimasi untuk input di mobile */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* Optimasi untuk kategori di mobile */
+        .category-tabs {
+            display: flex;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            flex-shrink: 0; /* Mencegah tab kategori menyusut */
+        }
+        .category-tab {
+            flex: 0 0 auto;
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+            background-color: #333333;
+            border-radius: 20px;
+            color: #E0E0E0;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        .category-tab.active {
+            background-color: #FFD700;
+            color: #1A1A1A;
+        }
+        
+        /* Optimasi untuk tombol selesaikan di mobile */
+        #complete-sale-btn {
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            border-radius: 0;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="login-container">
+        <div class="login-box">
+            <h3>LOGIN KASIR</h3>
+            <div id="login-error" class="alert alert-danger d-none" role="alert">
+                Email atau Password salah!
+            </div>
+            <form id="login-form">
+                <div class="mb-3">
+                    <label for="login-email" class="form-label text-white-50">Email</label>
+                    <input type="email" class="form-control form-control-dark" id="login-email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="login-password" class="form-label text-white-50">Password</label>
+                    <input type="password" class="form-control form-control-dark" id="login-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mt-3">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </button>
+            </form>
+        </div>
+    </div>
+    <div id="pos-container" class="d-none">
+
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+            <div class="container-fluid px-2">
+                <a class="navbar-brand" href="#">💰 KASIR</a>
+                <span class="navbar-text text-white-50 ms-auto me-2" id="user-email-display">
+                    </span>
+                <button class="btn btn-sm btn-outline-warning" id="logout-btn">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </div>
+        </nav>
+
+        <div id="pos-content" class="container-fluid">
+            
+            <!-- Tab Kategori untuk Mobile -->
+            <div class="category-tabs">
+                <div class="category-tab active" data-category="all">Semua</div>
+                <div class="category-tab" data-category="hot">☕ Panas</div>
+                <div class="category-tab" data-category="cold">🧊 Dingin</div>
+                <div class="category-tab" data-category="food">🍽️ Makanan</div>
+            </div>
+            
+            <div id="menu-panel">
+                <input type="text" id="menu-search-input" class="form-control form-control-dark mb-3" placeholder="Cari Menu...">
+
+                <div class="row row-cols-2 row-cols-sm-3 g-2" id="product-list-container">
+                </div>
+            </div>
+
+            <div id="checkout-panel">
+                <h4 class="text-center text-white mb-2">Rincian Pesanan</h4>
+
+                <div id="cart-items-container-pos" class="bg-dark rounded p-2 mb-2">
+                    <p class="text-center text-muted small mt-3" id="cart-empty-message">Ketuk menu di atas untuk memulai pesanan.</p>
+                </div>
+
+                <div class="payment-summary mt-auto">
+                    <div class="d-flex justify-content-between text-white mb-2">
+                        <span>Subtotal:</span>
+                        <span id="cart-subtotal-pos" class="text-white">Rp 0</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label small text-white">Diskon:</label>
+                        <div class="discount-buttons">
+                            <button class="btn btn-outline-warning discount-btn" onclick="applyDiscount(0)">Tidak Ada</button>
+                            <button class="btn btn-outline-warning discount-btn" onclick="applyDiscount(10)">10%</button>
+                            <button class="btn btn-outline-warning discount-btn" onclick="applyDiscount(20)">20%</button>
+                            <button class="btn btn-outline-warning discount-btn" onclick="applyDiscount(30)">30%</button>
+                            <button class="btn btn-outline-warning discount-btn" onclick="applyDiscount(40)">40%</button>
+                            <button class="btn btn-outline-warning discount-btn" onclick="applyDiscount(50)">50%</button>
+                        </div>
+                        <div class="discount-info">
+                            <span>Potongan Diskon:</span>
+                            <span id="discount-amount" class="discount-amount">Rp 0</span>
+                        </div>
+                    </div>
+                    
+                    <hr class="border-secondary">
+
+                    <div class="d-flex justify-content-between text-white fw-bold fs-5 mb-2">
+                        <span>TOTAL BAYAR:</span>
+                        <span id="cart-total-pos" class="text-warning">Rp 0</span>
+                    </div>
+                    
+                    <hr class="border-secondary">
+
+                    <div class="mb-3">
+                        <label for="bayar-input" class="form-label small text-white">Jumlah Dibayarkan (Cash):</label>
+                        <input type="number" id="bayar-input" class="form-control form-control-dark" placeholder="Masukkan jumlah uang" min="0" oninput="calculateChange()">
+                    </div>
+
+                    <div class="d-flex justify-content-between text-white fw-bold fs-5 mb-3">
+                        <span>Kembalian:</span>
+                        <span id="kembalian-text" class="text-success">Rp 0</span>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary w-100 py-3 fw-bold" id="complete-sale-btn" onclick="completeSale()" disabled>
+                        <i class="bi bi-cash-stack"></i> Selesaikan Penjualan
+                    </button>
+                    
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="productDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productDetailModalLabel">Detail Produk</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modal-product-image" src="" class="img-fluid rounded mb-3" alt="Product Image">
+                    <h4 id="modal-product-name" class="text-warning"></h4>
+                    <p id="modal-product-description" class="text-white-50"></p>
+                    <h3 id="modal-product-price" class="text-white fw-bold"></h3>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" id="modal-add-to-cart-btn" class="btn btn-primary">
+                        <i class="bi bi-cart-plus"></i> Tambah ke Keranjang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiptModalLabel">Struk Pembayaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="receipt-content">
+                        <div class="receipt-header">
+                            <h3>WAROENG MASHER</h3>
+                            <p>Jl. pancing mabar,pasar 4</p>
+                            <p>Telp: (Nomor Telepon)</p>
+                            <p id="receipt-date"></p>
+                            <p id="receipt-trans-id"></p>
+                        </div>
+                        <div class="receipt-body">
+                            <div id="receipt-items"></div>
+                            <hr>
+                            <div class="receipt-item">
+                                <span>Subtotal:</span>
+                                <span id="receipt-subtotal"></span>
+                            </div>
+                            <div class="receipt-item">
+                                <span>Diskon (<span id="receipt-discount-percent"></span>%):</span>
+                                <span id="receipt-discount-amount"></span>
+                            </div>
+                            <div class="receipt-item fw-bold">
+                                <span>Total:</span>
+                                <span id="receipt-total"></span>
+                            </div>
+                            <div class="receipt-item">
+                                <span>Tunai:</span>
+                                <span id="receipt-cash"></span>
+                            </div>
+                            <div class="receipt-item">
+                                <span>Kembalian:</span>
+                                <span id="receipt-change"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="qr-receipt-container">
+                            <div class="qr-receipt-title">📱 SCAN QR UNTUK STRUK DIGITAL</div>
+                            <div class="qr-receipt-content">
+                                <div class="qr-code-wrapper">
+                                    <div id="receipt-qr"></div>
+                                </div>
+                                <div class="receipt-preview" id="receipt-preview">
+                                    <div class="receipt-preview-header">
+                                        <h4>WAROENG MASHER</h4>
+                                        <p id="preview-date"></p>
+                                        <p id="preview-trans-id"></p>
+                                    </div>
+                                    <div class="receipt-preview-body" id="preview-items">
+                                    </div>
+                                    <div class="receipt-preview-footer">
+                                        <p>Terima Kasih</p>
+                                        <p>Selamat Berbelanja Kembali</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="qr-instruction">
+                                <p><i class="bi bi-qr-code-scan"></i> Scan QR untuk membuka struk di browser</p>
+                            </div>
+                        </div>
+
+                        <div class="receipt-footer">
+                            <p>Terima Kasih</p>
+                            <p>Selamat Berbelanja Kembali</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="printReceipt()">
+                        <i class="bi bi-printer"></i> Cetak
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
+    <script>
+        // --- DATA PRODUK (PINDAHKAN KE ATAS) ---
+        // Data produk kita letakkan di sini agar tidak terpengaruh error Firebase
+        const products = [
+            { id: 'INDONESIANO HOT', name: 'INDONESIANO HOT', price: 10000, image: 'sasya.jpg', description: 'Kopi hitam klasik Indonesia disajikan hangat dengan rasa otentik.', category: 'minuman', temperature: 'hot' },
+            { id: 'LONGBLACK HOT', name: 'LONGBLACK HOT', price: 10000, image: 'sasya.jpg', description: 'Espresso ganda yang diekstraksi ke dalam air panas, kuat dan menyegarkan.', category: 'minuman', temperature: 'hot' },
+            { id: 'FILTER COFFE HOT', name: 'FILTER KOPI HOT', price: 10000, image: '3.jpg', description: 'Kopi yang diseduh dengan metode filter, menonjolkan karakter biji kopi.', category: 'minuman', temperature: 'hot' },
+            { id: 'INDONESIANO ICED', name: 'INDONESIANO ICED', price: 12000, image: 'americano.jpg', description: 'Kopi Indonesia disajikan dingin, segar dan penuh semangat.', category: 'minuman', temperature: 'cold' },
+            { id: 'LONG BLACK ICED', name: 'LONG BLACK ICED', price: 12000, image: 'americano.jpg', description: 'Long Black dingin, pendamping sempurna di hari yang panas.', category: 'minuman', temperature: 'cold' },
+            { id: 'SANGER ICED', name: 'SANGER ICED', price: 15000, image: 'b.jpg', description: 'Sanger dingin yang creamy, minuman kopi favorit untuk penyuka rasa manis.', category: 'minuman', temperature: 'cold' },
+            { id: 'FILTER ICED', name: 'FILTER ICED', price: 12000, image: '4.jpg', description: 'Filter Kopi disajikan dingin, lebih lembut dan mudah dinikmati.', category: 'minuman', temperature: 'cold' },
+            { id: 'ESPRESSO', name: 'ESPRESSO', price: 8000, image: '6.jpg', description: 'kopi yang memiliki rasa yang sangat stroong.', category: 'minuman', temperature: 'hot' },
+            { id: 'TEH HIJAU HOT&COLD', name: 'TEH HIJAU HOT&COLD', price: 5000, image: '8.jpg', description: 'Teh hijau kaya antioksidan, bisa disajikan panas atau dingin.', category: 'minuman', temperature: 'both' },
+            { id: 'TEH MANIS HOT&COLD', name: 'TEH MANIS HOT&COLD', price: 5000, image: '7.jpg', description: 'Teh diseduh manis dan disajikan dingin, klasik dan melegakan dahaga.', category: 'minuman', temperature: 'both' },
+            { id: 'WEDANG JAHE HOT', name: 'WEDANG JAHE HOT', price: 10000, image: '9.jpg', description: 'Minuman jahe hangat yang menenangkan, cocok untuk cuaca dingin.', category: 'minuman', temperature: 'hot' },
+            { id: 'MILO COLD&HOT', name: 'MILO COLD&HOT', price: 10000, image: '10.jpg', description: 'Minuman cokelat malt favorit, bisa disajikan dingin atau hangat.', category: 'minuman', temperature: 'both' },
+            { id: 'KENTANG GORENG', name: 'KENTANG GORENG', price: 10000, image: '11.jpg', description: 'Kentang goreng renyah disajikan dengan saus pilihan.', category: 'makanan', temperature: 'none' },
+            { id: 'ROTI BAKAR', name: 'ROTI BAKAR', price: 7000, image: '12.jpg', description: 'Roti bakar dengan berbagai topping manis.', category: 'makanan', temperature: 'none' },
+            { id: 'AYAM PENYET', name: 'AYAM PENYET', price: 10000, image: '13.jpg', description: 'Ayam goreng dengan sambal penyet pedas, disajikan dengan nasi hangat.', category: 'makanan', temperature: 'none' },
+            { id: 'BAKARAN', name: 'ANEKA BAKARAN', price: 1000, image: '17.jpg', description: 'Pilihan sate-satean bakar (per tusuk) dengan bumbu spesial.', category: 'makanan', temperature: 'none' },
+            { id: 'AYAM PENYET SAMBEL IJO', name: 'AYAM PENYET SAMBEL IJO', price: 10000, image: '14.jpg', description: 'Ayam goreng dengan sambal hijau pedas yang khas.', category: 'makanan', temperature: 'none' }
+        ];
+
+        // --- INISIALISASI FIREBASE ---
+const firebaseConfig = {
+  apiKey: "AIzaSyBhRCNri0TjBdMx9fEN8jgAfDD-jV_FdNo",
+  authDomain: "waroengmasher.firebaseapp.com",
+  projectId: "waroengmasher",
+  storageBucket: "waroengmasher.firebasestorage.app",
+  messagingSenderId: "984134106741",
+  appId: "1:984134106741:web:81d129033d09475173c23c",
+  measurementId: "G-7RRW43T1LT"
+};
+
+        // Inisialisasi Firebase
+        let db;
+        let auth; // Variabel untuk Firebase Auth
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth(); // Inisialisasi Auth
+        } catch (e) {
+            console.error("Firebase Gagal diinisialisasi: ", e);
+            alert("Gagal memuat koneksi database. Harap refresh halaman.");
+        }
+
+
+        // --- LOGIKA AUTENTIKASI (LOGIN/LOGOUT) ---
+        
+        // Ambil elemen UI untuk Auth
+        const loginContainer = document.getElementById('login-container');
+        const posContainer = document.getElementById('pos-container');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userEmailDisplay = document.getElementById('user-email-display');
+
+        // 1. Fungsi untuk menangani Login
+        function handleLogin(e) {
+            e.preventDefault(); // Mencegah form reload halaman
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            loginError.classList.add('d-none'); // Sembunyikan error lama
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Login berhasil, 'onAuthStateChanged' akan menangani sisanya
+                    console.log('Login berhasil:', userCredential.user.email);
+                })
+                .catch((error) => {
+                    // Tampilkan error
+                    loginError.textContent = 'Email atau Password salah!';
+                    loginError.classList.remove('d-none');
+                    console.error('Login Gagal:', error.message);
+                });
+        }
+
+        // 2. Fungsi untuk menangani Logout
+        function handleLogout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                auth.signOut();
+            }
+        }
+
+        // 3. Listener Status Autentikasi (Paling Penting)
+        // Ini akan otomatis berjalan saat halaman dimuat dan saat login/logout
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // --- PENGGUNA SUDAH LOGIN ---
+                console.log('User sedang login:', user.email);
+                
+                // Tampilkan panel kasir dan sembunyikan login
+                posContainer.classList.remove('d-none');
+                loginContainer.classList.add('d-none');
+                
+                // Tampilkan email kasir di navbar
+                userEmailDisplay.textContent = user.email;
+
+                // Muat data menu dan keranjang HANYA setelah login berhasil
+                renderProducts();
+                renderCartPOS();
+
+            } else {
+                // --- PENGGUNA SUDAH LOGOUT ---
+                console.log('User tidak login.');
+                
+                // Tampilkan login dan sembunyikan panel kasir
+                posContainer.classList.add('d-none');
+                loginContainer.classList.remove('d-none');
+                
+                // Bersihkan data kasir
+                userEmailDisplay.textContent = '';
+                
+                // Reset keranjang saat logout
+                cart = [];
+                discountPercentage = 0;
+                if(bayarInput) bayarInput.value = '';
+                // Panggil renderCartPOS untuk membersihkan tampilan keranjang
+                renderCartPOS(); 
+            }
+        });
+
+
+        // --- LOGIKA KASIR (POS) ---
+        
+        let cart = []; // Keranjang sementara untuk kasir
+        let discountPercentage = 0; // Persentase diskon default
+        const productListContainer = document.getElementById('product-list-container');
+        const cartItemsContainerPOS = document.getElementById('cart-items-container-pos');
+        const cartSubtotalPOS = document.getElementById('cart-subtotal-pos');
+        const cartTotalPOS = document.getElementById('cart-total-pos');
+        const discountAmount = document.getElementById('discount-amount');
+        const bayarInput = document.getElementById('bayar-input');
+        const kembalianText = document.getElementById('kembalian-text');
+        const completeSaleBtn = document.getElementById('complete-sale-btn');
+        const cartEmptyMessage = document.getElementById('cart-empty-message');
+
+        // Elemen Modal
+        const productDetailModal = new bootstrap.Modal(document.getElementById('productDetailModal'));
+        const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+        const modalProductName = document.getElementById('modal-product-name');
+        const modalProductImage = document.getElementById('modal-product-image');
+        const modalProductDescription = document.getElementById('modal-product-description');
+        const modalProductPrice = document.getElementById('modal-product-price');
+        const modalAddToCartBtn = document.getElementById('modal-add-to-cart-btn');
+
+        function formatRupiah(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        }
+
+        function calculateSubtotal() {
+            return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        }
+
+        function calculateTotal() {
+            const subtotal = calculateSubtotal();
+            const discountValue = subtotal * (discountPercentage / 100);
+            return subtotal - discountValue;
+        }
+
+        // --- RENDER MENU ---
+        function renderProducts(filteredProducts = products) {
+            // Cek apakah elemen ada sebelum mengisinya
+            if (productListContainer) productListContainer.innerHTML = '';
+            
+            // Filter berdasarkan kategori yang aktif
+            const activeCategory = document.querySelector('.category-tab.active').dataset.category;
+            let productsToShow = filteredProducts;
+            
+            if (activeCategory !== 'all') {
+                if (activeCategory === 'hot') {
+                    productsToShow = filteredProducts.filter(p => p.category === 'minuman' && (p.temperature === 'hot' || p.temperature === 'both'));
+                } else if (activeCategory === 'cold') {
+                    productsToShow = filteredProducts.filter(p => p.category === 'minuman' && (p.temperature === 'cold' || p.temperature === 'both'));
+                } else if (activeCategory === 'food') {
+                    productsToShow = filteredProducts.filter(p => p.category === 'makanan');
+                }
+            }
+            
+            productsToShow.forEach(product => {
+                if (productListContainer) productListContainer.innerHTML += createProductCard(product);
+            });
+            
+            // Tambahkan event listener untuk kartu yang diklik
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Jika yang diklik adalah tombol detail, jangan tambahkan ke keranjang
+                    if (e.target.closest('.btn-detail')) {
+                        return;
+                    }
+                    e.preventDefault();
+                    addToCart(e.currentTarget.dataset.id);
+                });
+            });
+        }
+
+        function createProductCard(product) {
+            // Tentukan badge berdasarkan suhu
+            let badgeHtml = '';
+            if (product.temperature === 'hot') {
+                badgeHtml = '<span class="category-badge hot-badge">PANAS</span>';
+            } else if (product.temperature === 'cold') {
+                badgeHtml = '<span class="category-badge cold-badge">DINGIN</span>';
+            } else if (product.temperature === 'both') {
+                badgeHtml = '<span class="category-badge">PANAS/DINGIN</span>';
+            }
+            
+            return `
+                <div class="col">
+                    <div class="card product-card h-100" data-id="${product.id}">
+                        ${badgeHtml}
+                        <button class="btn-detail" onclick="showProductDetail('${product.id}')">
+                            <i class="bi bi-info-circle"></i>
+                        </button>
+                        <img src="${product.image}" class="card-img-top" alt="${product.name}">
+                        <div class="card-body d-flex flex-column justify-content-between">
+                            <h5 class="card-title text-center">${product.name}</h5>
+                            <h6 class="text-center text-white">${formatRupiah(product.price)}</h6>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- FUNGSI DETAIL PRODUK ---
+        function showProductDetail(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            // Isi modal dengan data produk
+            modalProductName.textContent = product.name;
+            modalProductImage.src = product.image;
+            modalProductDescription.textContent = product.description;
+            modalProductPrice.textContent = formatRupiah(product.price);
+
+            // Set event listener untuk tombol tambah ke keranjang di modal
+            modalAddToCartBtn.onclick = () => {
+                addToCart(productId);
+                productDetailModal.hide(); // Tutup modal setelah menambahkan
+            };
+
+            // Tampilkan modal
+            productDetailModal.show();
+        }
+
+        // --- FUNGSI KERANJANG KASIR ---
+        function addToCart(productId) {
+            const existingItemIndex = cart.findIndex(item => item.id === productId);
+            const product = products.find(p => p.id === productId);
+            
+            if (!product) return;
+
+            if (existingItemIndex > -1) {
+                cart[existingItemIndex].quantity += 1;
+            } else {
+                cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1 });
+            }
+            renderCartPOS();
+        }
+        
+        function updateQuantityPOS(productId, change) {
+            const itemIndex = cart.findIndex(item => item.id === productId);
+            if (itemIndex > -1) {
+                cart[itemIndex].quantity += change;
+                if (cart[itemIndex].quantity <= 0) {
+                    cart.splice(itemIndex, 1); // Hapus jika kuantitas 0
+                }
+            }
+            renderCartPOS();
+        }
+
+        function renderCartPOS() {
+            // Cek jika elemen ada (karena bisa dipanggil saat logout)
+            if (!cartItemsContainerPOS) return; 
+
+            cartItemsContainerPOS.innerHTML = '';
+            
+            if (cart.length === 0) {
+                cartEmptyMessage.style.display = 'block';
+                completeSaleBtn.disabled = true;
+            } else {
+                cartEmptyMessage.style.display = 'none';
+                completeSaleBtn.disabled = false; // Akan di-cek ulang oleh calculateChange
+                
+                let html = ``;
+                cart.forEach(item => {
+                    const subtotal = item.price * item.quantity;
+                    html += `
+                        <div class="d-flex cart-item-pos align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">${item.name}</h6>
+                                <p class="price-qty mb-0">${formatRupiah(item.price)}</p>
+                            </div>
+                            <div class="d-flex align-items-center me-2">
+                                <button class="btn btn-sm btn-outline-warning btn-qty" onclick="updateQuantityPOS('${item.id}', -1)"><i class="bi bi-dash"></i></button>
+                                <span class="text-white fw-bold mx-2">${item.quantity}</span>
+                                <button class="btn btn-sm btn-success btn-qty" onclick="updateQuantityPOS('${item.id}', 1)"><i class="bi bi-plus"></i></button>
+                            </div>
+                            <span class="text-warning fw-bold">${formatRupiah(subtotal)}</span>
+                        </div>
+                    `;
+                });
+                cartItemsContainerPOS.innerHTML = html;
+            }
+
+            // Update Subtotal, Diskon, dan Total
+            const subtotal = calculateSubtotal();
+            const discountValue = subtotal * (discountPercentage / 100);
+            const total = subtotal - discountValue;
+            
+            cartSubtotalPOS.textContent = formatRupiah(subtotal);
+            discountAmount.textContent = formatRupiah(discountValue);
+            cartTotalPOS.textContent = formatRupiah(total);
+            
+            calculateChange(); // Hitung kembalian setiap ada perubahan keranjang
+        }
+
+        // --- FUNGSI DISKON ---
+        function applyDiscount(percentage) {
+            discountPercentage = percentage;
+            
+            // Update UI untuk menunjukkan tombol diskon yang aktif
+            document.querySelectorAll('.discount-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderCartPOS();
+        }
+
+        // --- FUNGSI PEMBAYARAN DAN KEMBALIAN ---
+        function calculateChange() {
+            // Cek jika elemen ada
+            if (!kembalianText || !completeSaleBtn || !bayarInput) return;
+
+            const total = calculateTotal();
+            const bayar = parseInt(bayarInput.value) || 0;
+            const kembalian = bayar - total;
+
+            if (total === 0) {
+                kembalianText.textContent = formatRupiah(0);
+                completeSaleBtn.disabled = true;
+                return;
+            }
+
+            if (kembalian >= 0) {
+                kembalianText.textContent = formatRupiah(kembalian);
+                kembalianText.classList.remove('text-danger');
+                kembalianText.classList.add('text-success');
+                completeSaleBtn.disabled = false;
+            } else {
+                kembalianText.textContent = formatRupiah(kembalian);
+                kembalianText.classList.remove('text-success');
+                kembalianText.classList.add('text-danger');
+                completeSaleBtn.disabled = true;
+            }
+
+            if (cart.length === 0) {
+                completeSaleBtn.disabled = true;
+                bayarInput.value = '';
+                kembalianText.textContent = formatRupiah(0);
+            }
+        }
+
+        function completeSale() {
+            // Cek apakah db (Firebase) berhasil diinisialisasi
+            if (!db) {
+                alert('Error! Koneksi database Firebase gagal. Transaksi tidak dapat disimpan. Harap periksa konfigurasi API Key Anda.');
+                return;
+            }
+            
+            const subtotal = calculateSubtotal();
+            const discountValue = subtotal * (discountPercentage / 100);
+            const total = calculateTotal();
+            const bayar = parseInt(bayarInput.value) || 0;
+            const kembalian = bayar - total;
+            
+            if (cart.length === 0) {
+                alert('Gagal! Keranjang masih kosong.');
+                return;
+            }
+
+            if (kembalian < 0) {
+                alert('Gagal! Jumlah bayar kurang.');
+                return;
+            }
+            
+            // Logika Penyelesaian Transaksi
+            const transactionId = 'TRX-' + Date.now();
+            const transactionData = {
+                transactionId: transactionId,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                subtotal: subtotal,
+                discount: discountPercentage,
+                discountAmount: discountValue,
+                total: total,
+                bayar: bayar,
+                kembalian: kembalian,
+                items: cart.map(item => ({ id: item.id, name: item.name, price: item.price, qty: item.quantity })),
+                
+                // --- TAMBAHAN PENTING ---
+                // Menyimpan info kasir yang sedang login
+                kasirEmail: auth.currentUser ? auth.currentUser.email : 'Tidak Diketahui',
+                kasirUid: auth.currentUser ? auth.currentUser.uid : 'Tidak Diketahui',
+                // -------------------------
+
+                status: 'Selesai'
+            };
+
+            // Simpan ke Firestore
+            // INI SEKARANG AKAN BERHASIL karena user sudah login
+            db.collection('transactions').add(transactionData)
+                .then(() => {
+                    // Tampilkan struk pembayaran
+                    showReceipt(transactionData);
+                    
+                    // Reset Kasir
+                    cart = [];
+                    discountPercentage = 0;
+                    bayarInput.value = '';
+                    
+                    // Reset UI diskon
+                    document.querySelectorAll('.discount-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    document.querySelector('.discount-btn').classList.add('active'); // Set "Tidak Ada" sebagai default
+                    
+                    renderCartPOS();
+                    calculateChange();
+                })
+                .catch(error => {
+                    // Ini adalah error jika DITOLAK OLEH RULES
+                    console.error("Error writing document: ", error);
+                    alert('Error! Gagal menyimpan transaksi ke database. (Kode: ' + error.code + ')');
+                });
+        }
+        
+        // --- FUNGSI STRUK/RECEIPT ---
+        function showReceipt(transactionData) {
+            // Format tanggal
+            const date = new Date();
+            const formattedDate = date.toLocaleDateString('id-ID') + ' ' + date.toLocaleTimeString('id-ID');
+            
+            // Isi data struk
+            document.getElementById('receipt-date').textContent = formattedDate;
+            document.getElementById('receipt-trans-id').textContent = 'ID: ' + transactionData.transactionId;
+            document.getElementById('receipt-subtotal').textContent = formatRupiah(transactionData.subtotal);
+            document.getElementById('receipt-discount-percent').textContent = transactionData.discount;
+            document.getElementById('receipt-discount-amount').textContent = formatRupiah(transactionData.discountAmount);
+            document.getElementById('receipt-total').textContent = formatRupiah(transactionData.total);
+            document.getElementById('receipt-cash').textContent = formatRupiah(transactionData.bayar);
+            document.getElementById('receipt-change').textContent = formatRupiah(transactionData.kembalian);
+            
+            // Isi item-item
+            let itemsHtml = '';
+            transactionData.items.forEach(item => {
+                itemsHtml += `
+                    <div class="receipt-item">
+                        <span>${item.name} (${item.qty}x)</span>
+                        <span>${formatRupiah(item.price * item.qty)}</span>
+                    </div>
+                `;
+            });
+            document.getElementById('receipt-items').innerHTML = itemsHtml;
+            
+            // Update receipt preview
+            updateReceiptPreview(transactionData, formattedDate);
+            
+            // Generate QR Code dengan DATA DETAIL
+            generateReceiptQR(transactionData, formattedDate);
+            
+            // Tampilkan modal struk
+            receiptModal.show();
+            
+            // Tambahkan notifikasi
+            setTimeout(() => {
+                showNotification('QR Code struk digital berhasil dibuat! Scan untuk menyimpan struk Anda.');
+            }, 500);
+        }
+        
+        // Update receipt preview
+        function updateReceiptPreview(transactionData, formattedDate) {
+            document.getElementById('preview-date').textContent = formattedDate;
+            document.getElementById('preview-trans-id').textContent = 'ID: ' + transactionData.transactionId;
+            
+            let previewItemsHtml = '';
+            transactionData.items.forEach(item => {
+                previewItemsHtml += `
+                    <div class="receipt-preview-item">
+                        <span>${item.name} (${item.qty}x)</span>
+                        <span>${formatRupiah(item.price * item.qty)}</span>
+                    </div>
+                `;
+            });
+            
+            // Add summary items
+            previewItemsHtml += `
+                <div class="receipt-preview-item" style="border-top: 1px dashed #000; padding-top: 3px; margin-top: 3px;">
+                    <span>Total:</span>
+                    <span>${formatRupiah(transactionData.total)}</span>
+                </div>
+            `;
+            
+            document.getElementById('preview-items').innerHTML = previewItemsHtml;
+        }
+        
+        // --- FUNGSI generateReceiptQR (TETAP SAMA) ---
+        // (Menggunakan metode Rekomendasi 1: Data di dalam URL)
+        function generateReceiptQR(transactionData, formattedDate) {
+            const qrContainer = document.getElementById('receipt-qr');
+            qrContainer.innerHTML = ''; // Kosongkan dulu
+
+            try {
+                // 1. Buat data terstruktur
+                const qrData = {
+                    merchant: "WAROENG MASHER",
+                    id: transactionData.transactionId,
+                    date: formattedDate,
+                    items: transactionData.items.map(item => ({ 
+                        n: item.name,
+                        q: item.qty,
+                        p: item.price
+                    })),
+                    sub: transactionData.subtotal,
+                    disc_p: transactionData.discount,
+                    disc_a: transactionData.discountAmount,
+                    total: transactionData.total,
+                    paid: transactionData.bayar,
+                    change: transactionData.kembalian
+                };
+
+                // 2. Ubah data JSON menjadi string
+                const dataString = JSON.stringify(qrData);
+                
+                // 3. ENCODE string itu ke Base64 (agar aman ditaruh di URL)
+                const encodedData = btoa(dataString);
+
+                // 4. Buat URL yang berisi data ter-encode itu
+                // Ganti "struk.html" jika nama file Anda berbeda
+                const strukUrl = `https://waroengmasher.firebaseapp.com/struk.html?data=${encodedData}`;
+
+                // 5. Generate QR Code HANYA dengan URL yang sudah berisi data
+                new QRCode(qrContainer, {
+                    text: strukUrl,
+                    width: 150, // Lebih kecil untuk mobile
+                    height: 150, // Lebih kecil untuk mobile
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.L, // 'L' (Low) agar muat data lebih banyak
+                    margin: 2
+                });
+                
+            } catch (error) {
+                console.error("Gagal generate QR Code:", error);
+                const fallbackText = `ID Transaksi: ${transactionData.transactionId}\nTotal: ${formatRupiah(transactionData.total)}`;
+                new QRCode(qrContainer, {
+                    text: fallbackText,
+                    width: 150, // Lebih kecil untuk mobile
+                    height: 150, // Lebih kecil untuk mobile
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            }
+        }
+        
+        // Fungsi notifikasi
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            notification.style.zIndex = '9999';
+            notification.style.minWidth = '300px';
+            notification.innerHTML = `
+                <i class="bi bi-check-circle-fill me-2"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+        
+        function printReceipt() {
+            window.print();
+        }
+        
+        // --- FUNGSI FILTER/PENCARIAN ---
+        function filterProducts() {
+            const searchTerm = document.getElementById('menu-search-input').value.toLowerCase();
+            const filtered = products.filter(product => 
+                product.name.toLowerCase().includes(searchTerm) || 
+                product.description.toLowerCase().includes(searchTerm)
+            );
+            renderProducts(filtered);
+        }
+
+        // --- INISIALISASI ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 'onAuthStateChanged' akan menangani pemanggilan renderProducts dan renderCartPOS
+            
+            // --- TAMBAHKAN EVENT LISTENER UNTUK AUTH ---
+            loginForm.addEventListener('submit', handleLogin);
+            logoutBtn.addEventListener('click', handleLogout);
+            
+            // Panggil filterproducts saat mengetik di search bar
+            document.getElementById('menu-search-input').addEventListener('input', filterProducts);
+            
+            // Mencegah form submission default pada input pembayaran dan memicu completeSale
+            bayarInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); 
+                    if (!completeSaleBtn.disabled) {
+                        completeSale();
+                    }
+                }
+            });
+            
+            // Set tombol diskon default
+            document.querySelector('.discount-btn').classList.add('active');
+            
+            // Tambahkan event listener untuk tab kategori
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+
+                    // Hapus kelas active dari semua tab
+                    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                    // Tambahkan kelas active ke tab yang diklik
+                    this.classList.add('active');
+                    // Render ulang produk berdasarkan kategori yang dipilih
+                    renderProducts();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
